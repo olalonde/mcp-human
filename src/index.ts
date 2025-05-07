@@ -17,7 +17,7 @@ import {
 } from "@aws-sdk/client-mturk";
 
 // Configuration
-const FORM_SERVER_URL = process.env.FORM_SERVER_URL || "https://syskall.com/mcp-human";
+const FORM_SERVER_URL = process.env.FORM_SERVER_URL || "https://syskall.com/mcp-human/";
 const USE_SANDBOX = process.env.MTURK_SANDBOX !== "false"; // Default to sandbox for safety
 
 // Initialize MTurk client
@@ -51,24 +51,17 @@ server.tool(
       .string()
       .optional()
       .describe("Description for the HIT (optional)"),
-    timeoutSeconds: z
+    hitValiditySeconds: z
       .number()
       .default(3600)
-      .describe("Time until the HIT expires in seconds (default: 1 hour)"),
-    maxWaitSeconds: z
-      .number()
-      .default(300)
-      .describe(
-        "Maximum time to wait for a response in seconds (default: 5 minutes)",
-      ),
+      .describe("Time until the HIT expires in seconds (default: 1 hour)")
   },
   async ({
     question,
     reward,
     title,
     description,
-    timeoutSeconds,
-    maxWaitSeconds,
+    hitValiditySeconds,
   }) => {
     try {
       // Create HIT parameters
@@ -77,7 +70,7 @@ server.tool(
       let formUrl;
 
       // Always use the GitHub Pages URL
-      formUrl = new URL("/index.html", FORM_SERVER_URL);
+      formUrl = new URL(FORM_SERVER_URL);
 
       // Add question and callback parameters
       formUrl.searchParams.append("question", encodeURIComponent(question));
@@ -100,8 +93,8 @@ server.tool(
         `,
         Reward: reward,
         MaxAssignments: 1,
-        AssignmentDurationInSeconds: timeoutSeconds,
-        LifetimeInSeconds: timeoutSeconds,
+        AssignmentDurationInSeconds: hitValiditySeconds,
+        LifetimeInSeconds: hitValiditySeconds,
         AutoApprovalDelayInSeconds: 86400, // Auto-approve after 24 hours
       };
 
@@ -116,7 +109,7 @@ server.tool(
       // Poll for results
       let assignment = null;
       const startTime = Date.now();
-      const maxWaitTime = maxWaitSeconds * 1000;
+      const maxWaitTime = hitValiditySeconds * 1000;
       const pollInterval = 5000; // Poll every 5 seconds
 
       while (Date.now() - startTime < maxWaitTime) {
@@ -244,7 +237,7 @@ server.tool(
                   RequesterFeedback: "Thank you for your response!",
                 }),
               );
-              console.log(
+              console.error(
                 `Auto-approved assignment ${assignment.AssignmentId}`,
               );
             } catch (approveError) {
@@ -315,7 +308,17 @@ server.tool(
 // Add a resource for MTurk account info
 server.resource(
   "mturk-account",
-  new ResourceTemplate("mturk-account://{info}", { list: undefined }),
+  new ResourceTemplate("mturk-account://{info}", { 
+    list: async () => {
+      return {
+        resources: [
+          { name: "balance", uri: "mturk-account://balance", description: "Get MTurk account balance" },
+          { name: "hits", uri: "mturk-account://hits", description: "List active HITs" },
+          { name: "config", uri: "mturk-account://config", description: "Get MTurk configuration" }
+        ]
+      };
+    }
+  }),
   async (uri, { info }) => {
     try {
       let content = "";
@@ -388,6 +391,70 @@ server.resource(
   },
 );
 
+// Add a prompt for asking humans
+server.prompt(
+  "ask-human",
+  "A prompt for asking human workers questions via MTurk",
+  {
+    question: z.string(),
+    reward: z.string().optional(),
+    title: z.string().optional(),
+    maxWaitTime: z.string().optional()
+  },
+  (args) => ({
+    messages: [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: `I need to ask a human worker the following question: "${args.question}"`
+        }
+      },
+      {
+        role: "assistant",
+        content: {
+          type: "text",
+          text: `I'll help you ask a human worker through Mechanical Turk. Let me set that up for you.`
+        }
+      },
+      {
+        role: "assistant",
+        content: {
+          type: "text",
+          text: `Let me ask a human for you: "${args.question}"`
+        }
+      }
+    ]
+  })
+);
+
+// Add another prompt for checking HIT status
+server.prompt(
+  "check-hit",
+  "A prompt for checking the status of a HIT",
+  {
+    hitId: z.string()
+  },
+  (args) => ({
+    messages: [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: `Check the status of HIT with ID ${args.hitId}`
+        }
+      },
+      {
+        role: "assistant",
+        content: {
+          type: "text",
+          text: `I'll check the status of the HIT with ID ${args.hitId} for you.`
+        }
+      }
+    ]
+  })
+);
+
 // Start receiving messages on stdin and sending messages on stdout
 const transport = new StdioServerTransport();
 server.connect(transport).catch((err) => {
@@ -395,4 +462,4 @@ server.connect(transport).catch((err) => {
   process.exit(1);
 });
 
-console.log("MCP Human-in-the-loop server started");
+// console.log("MCP Human-in-the-loop server started");
