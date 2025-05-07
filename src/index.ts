@@ -26,9 +26,7 @@ const mturkClient = new MTurkClient({
     ? "https://mturk-requester-sandbox.us-east-1.amazonaws.com"
     : undefined,
   // Use the mcp-human AWS profile
-  credentials: {
-    profile: "mcp-human"
-  }
+  profile: "mcp-human"
 });
 
 // Create an MCP server
