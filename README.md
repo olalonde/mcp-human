@@ -27,7 +27,7 @@ Update the configuration of your MCP client to the following:
 ```json
 {
   "mcpServers": {
-    "mcpmcp": {
+    "human": {
       "command": "npx",
       "args": ["-y", "mcp-human@latest"]
     }
@@ -43,7 +43,7 @@ Claude Code: `cat ~/.claude.json`
 For Claude Code you can also use the following command:
 
 ```sh
-claude mcp add mcp-human -- npx -y mcp-human@latest 
+claude mcp add human -- npx -y mcp-human@latest 
 ```
 
 ## Architecture
