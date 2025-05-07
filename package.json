@@ -3,6 +3,9 @@
   "version": "0.0.3",
   "main": "dist/index.js",
   "type": "module",
+  "bin": {
+    "mcp-human": "./dist/index.js" 
+  },
   "scripts": {
     "build": "tsc",
     "type-check": "tsc --noEmit",
