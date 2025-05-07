@@ -2,6 +2,8 @@
 
 This MCP (Model Context Protocol) server allows AI assistants to delegate tasks to humans via Amazon Mechanical Turk. It provides a bridge between AI systems and human workers, enabling hybrid intelligence workflows.
 
+![we need to go deeper](./deeper.gif)
+
 ## Setup
 
 ### Prerequisites
