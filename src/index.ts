@@ -25,7 +25,10 @@ const mturkClient = new MTurkClient({
   endpoint: USE_SANDBOX
     ? "https://mturk-requester-sandbox.us-east-1.amazonaws.com"
     : undefined,
-  // Credentials come from environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+  // Use the mcp-human AWS profile
+  credentials: {
+    profile: "mcp-human"
+  }
 });
 
 // Create an MCP server
