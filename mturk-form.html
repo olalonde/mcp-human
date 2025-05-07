@@ -50,16 +50,37 @@
         .instructions {
             margin-bottom: 20px;
         }
+        .preview-mode {
+            background-color: #fff4e5;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ffd8a8;
+        }
+        .hidden {
+            display: none;
+        }
+        .submit-success {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <h1>Answer a Question from an AI Assistant</h1>
     
+    <div id="preview-mode-notice" class="preview-mode hidden">
+        <p><strong>MTurk Preview Mode:</strong> This is just a preview. You must accept the HIT before you can submit an answer.</p>
+    </div>
+    
     <div class="instructions">
         <p>An AI assistant is seeking human input on the following question. Please provide a thoughtful and helpful response.</p>
     </div>
     
-    <div class="container">
+    <div id="form-container" class="container">
         <div class="question" id="question-display">
             Loading question...
         </div>
@@ -70,68 +91,94 @@
                 <label for="answer"><b>Your Answer:</b></label>
                 <textarea id="answer" name="answer" required></textarea>
             </div>
-            <button type="submit">Submit Answer</button>
+            <button type="submit" id="submit-button">Submit Answer</button>
         </form>
+    </div>
+    
+    <div id="success-message" class="submit-success hidden">
+        <h2>Thank you for your response!</h2>
+        <p>Your answer has been successfully submitted.</p>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Parse URL parameters
             const urlParams = new URLSearchParams(window.location.search);
-            const question = urlParams.get('question');
-            const assignmentId = urlParams.get('assignmentId');
+            const question = urlParams.get('question') || "No question provided";
+            const assignmentId = urlParams.get('assignmentId') || "";
+            const turkSubmitTo = urlParams.get('turkSubmitTo') || "";
+            const hitId = urlParams.get('hitId') || "";
+            const workerId = urlParams.get('workerId') || "";
             
-            // Display the question
-            if (question) {
-                document.getElementById('question-display').textContent = question;
-            } else {
-                document.getElementById('question-display').textContent = "Error: No question provided.";
+            // Check if we're in preview mode
+            const isPreview = assignmentId === "ASSIGNMENT_ID_NOT_AVAILABLE";
+            if (isPreview) {
+                document.getElementById('preview-mode-notice').classList.remove('hidden');
+                document.getElementById('submit-button').disabled = true;
             }
+            
+            // Display the question (decoding it first)
+            document.getElementById('question-display').textContent = decodeURIComponent(question);
             
             // Set the assignment ID
-            if (assignmentId) {
-                document.getElementById('assignmentId').value = assignmentId;
-            }
+            document.getElementById('assignmentId').value = assignmentId;
             
             // Handle form submission
             document.getElementById('answer-form').addEventListener('submit', function(e) {
-                e.preventDefault();
+                if (isPreview) {
+                    e.preventDefault();
+                    alert("This is just a preview. Please accept the HIT to submit an answer.");
+                    return;
+                }
                 
-                const answer = document.getElementById('answer').value;
-                
-                // In a real implementation, you would submit this back to MTurk
-                // This is just a placeholder for demonstration
-                if (window.opener) {
-                    window.opener.postMessage({ 
-                        assignmentId: assignmentId, 
-                        answer: answer 
-                    }, '*');
-                    alert('Answer submitted successfully!');
-                    window.close();
+                // If in actual work mode, handle MTurk submission
+                if (assignmentId && turkSubmitTo) {
+                    // Let the form submit normally to MTurk's endpoint
+                    this.method = 'post';
+                    this.action = turkSubmitTo + '/mturk/externalSubmit';
+                    
+                    // Show success message after submission
+                    const formContainer = document.getElementById('form-container');
+                    const successMessage = document.getElementById('success-message');
+                    
+                    formContainer.classList.add('hidden');
+                    successMessage.classList.remove('hidden');
+                    
+                    // Store the answer in localStorage for potential retrieval
+                    try {
+                        const answerData = {
+                            hitId: hitId,
+                            assignmentId: assignmentId,
+                            workerId: workerId,
+                            question: question,
+                            answer: document.getElementById('answer').value,
+                            timestamp: new Date().toISOString()
+                        };
+                        
+                        // Store locally - this could be replaced with an API call to your server
+                        localStorage.setItem(`mturk_answer_${assignmentId}`, JSON.stringify(answerData));
+                        
+                        // Optional: attempt to send to a server if we have a callback URL
+                        const callbackUrl = urlParams.get('callbackUrl');
+                        if (callbackUrl) {
+                            fetch(callbackUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(answerData)
+                            }).catch(error => console.error('Error sending callback:', error));
+                        }
+                    } catch (err) {
+                        console.error('Error storing answer:', err);
+                    }
                 } else {
-                    // If not opened as a popup, submit to MTurk
-                    // You would need to implement this part for actual MTurk integration
-                    alert('Answer recorded: ' + answer);
+                    // Handle standalone mode (not inside MTurk iframe)
+                    e.preventDefault();
+                    alert('Answer submitted: ' + document.getElementById('answer').value);
                     
-                    // For demonstration purposes only
-                    const form = document.createElement('form');
-                    form.method = 'post';
-                    form.action = 'https://workersandbox.mturk.com/mturk/externalSubmit'; // Use the actual submission URL in production
-                    
-                    const answerInput = document.createElement('input');
-                    answerInput.type = 'hidden';
-                    answerInput.name = 'answer';
-                    answerInput.value = answer;
-                    form.appendChild(answerInput);
-                    
-                    const assignmentInput = document.createElement('input');
-                    assignmentInput.type = 'hidden';
-                    assignmentInput.name = 'assignmentId';
-                    assignmentInput.value = assignmentId || '';
-                    form.appendChild(assignmentInput);
-                    
-                    document.body.appendChild(form);
-                    form.submit();
+                    document.getElementById('form-container').classList.add('hidden');
+                    document.getElementById('success-message').classList.remove('hidden');
                 }
             });
         });

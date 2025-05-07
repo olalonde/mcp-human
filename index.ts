@@ -36,8 +36,25 @@ server.tool(
   async ({ question, reward, title, description, timeoutSeconds, maxWaitSeconds }) => {
     try {
       // Create HIT parameters
-      const formUrl = new URL("/mturk-form", FORM_SERVER_URL);
-      formUrl.searchParams.append("question", question);
+      // For GitHub Pages, use the direct HTML page URL
+      // Default to local server if GITHUB_PAGES_URL is not set
+      let formUrl;
+      
+      if (process.env.GITHUB_PAGES_URL) {
+        // Use GitHub Pages URL if available
+        formUrl = new URL("/mturk-form.html", process.env.GITHUB_PAGES_URL);
+      } else {
+        // Fallback to form server
+        formUrl = new URL("/mturk-form", FORM_SERVER_URL);
+      }
+      
+      // Add question and callback parameters
+      formUrl.searchParams.append("question", encodeURIComponent(question));
+      
+      // If a callback URL is provided, add it to the form URL
+      if (process.env.CALLBACK_URL) {
+        formUrl.searchParams.append("callbackUrl", process.env.CALLBACK_URL);
+      }
       
       const params = {
         Title: title || "Answer a question from an AI assistant",
