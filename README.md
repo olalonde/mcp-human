@@ -35,6 +35,17 @@ Update the configuration of your MCP client to the following:
 }
 ```
 
+e.g.:
+
+Claude Desktop (MacOS): `~/Library/Application\ Support/Claude/claude_desktop_config.json`
+Claude Code: `cat ~/.claude.json`
+
+For Claude Code you can also use the following command:
+
+```sh
+claude mcp add mcp-human -- npx -y mcp-human@latest 
+```
+
 ## Architecture
 
 This system consists of two main components:
