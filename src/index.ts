@@ -15,7 +15,7 @@ import {
 } from "@aws-sdk/client-mturk";
 
 // Configuration
-const FORM_SERVER_URL = process.env.FORM_SERVER_URL || "http://localhost:3000";
+const FORM_SERVER_URL = process.env.FORM_SERVER_URL || "https://syskall.com/mcp-human";
 const USE_SANDBOX = process.env.MTURK_SANDBOX !== "false"; // Default to sandbox for safety
 
 // Initialize MTurk client
@@ -73,13 +73,8 @@ server.tool(
       // Default to local server if GITHUB_PAGES_URL is not set
       let formUrl;
 
-      if (process.env.GITHUB_PAGES_URL) {
-        // Use GitHub Pages URL if available
-        formUrl = new URL("/mturk-form.html", process.env.GITHUB_PAGES_URL);
-      } else {
-        // Fallback to form server
-        formUrl = new URL("/mturk-form", FORM_SERVER_URL);
-      }
+      // Always use the GitHub Pages URL
+      formUrl = new URL("/index.html", FORM_SERVER_URL);
 
       // Add question and callback parameters
       formUrl.searchParams.append("question", encodeURIComponent(question));
