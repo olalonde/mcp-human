@@ -8,11 +8,13 @@ console.log("LLM: I need human assistance to answer this creative question...");
 
 // Step 2: LLM would use the askHuman tool
 const humanRequest = {
-  question: "What's a creative name for a product that helps people remember their dreams?",
+  question:
+    "What's a creative name for a product that helps people remember their dreams?",
   reward: "0.10",
   title: "Help an AI with a creative product name",
-  description: "Provide a creative and catchy product name for a dream-remembering device",
-  timeoutSeconds: 1800  // 30 minutes
+  description:
+    "Provide a creative and catchy product name for a dream-remembering device",
+  timeoutSeconds: 1800, // 30 minutes
 };
 
 console.log("LLM: Sending request to human worker:", humanRequest);
@@ -24,10 +26,12 @@ console.log("MCP Server: Waiting for human response...");
 // Step 4: Simulate response coming back (this would happen asynchronously)
 setTimeout(() => {
   console.log("Human Worker: Responding with 'DreamCatcher Pro'");
-  
+
   // Step 5: LLM receives the response
   console.log("LLM: Received human response 'DreamCatcher Pro'");
-  console.log("LLM: Thank you for the creative name suggestion! I'll use 'DreamCatcher Pro' in my response to the user.");
+  console.log(
+    "LLM: Thank you for the creative name suggestion! I'll use 'DreamCatcher Pro' in my response to the user.",
+  );
 }, 2000);
 
 // Note: In a real implementation, the LLM would:

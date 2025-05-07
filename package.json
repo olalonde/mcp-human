@@ -8,6 +8,7 @@
     "type-check": "tsc --noEmit",
     "start": "node dist/index.js",
     "dev": "node src/index.ts",
+    "prettier": "prettier --write src/",
     "test": "npm run type-check"
   },
   "author": "",
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.15",
+    "prettier": "^3.5.3",
     "typescript": "^5.8.3"
   }
 }
