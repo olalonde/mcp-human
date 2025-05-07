@@ -1,4 +1,4 @@
-# A MCP Server for Humans
+# A MCP Server for Human Assistance
 
 MCP (Model Context Protocol) server that gives human assistance to AIs. It uses Amazon Mechanical Turk to ask questions to a real humans. This is more of a proof-of-concept than a serious tool but improvements are welcome. See [limitations](#limitations).
 
