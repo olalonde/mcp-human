@@ -15,10 +15,57 @@ import {
   ListHITsCommand,
   ApproveAssignmentCommand,
 } from "@aws-sdk/client-mturk";
+import { XMLParser } from "fast-xml-parser";
+const xmlParser = new XMLParser();
+
+function escapeXml(unsafe: string) {
+  return unsafe.replace(/[<>&'"]/g, (c: string): string => {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '"': return '&quot;';
+      case "'": return '&apos;';
+    }
+    return c;
+  });
+}
+
+// Open temporary file for logging
+import { createWriteStream } from "fs";
+
+const noop = (something: unknown) => {};
+let log = noop;
+
+// Logging for development....
+if (process.env.MCP_HUMAN_LOGGING) {
+  console.log("Logging to console");
+  const logFile = createWriteStream("/tmp/mcp-human.log", { flags: "a" });
+  log = (something: string | unknown) => {
+    let message;
+    if (typeof something === "string") {
+      message = something;
+    } else {
+      message = JSON.stringify(something, null, 2);
+    }
+    const timestamp = new Date().toISOString();
+    logFile.write(`[${timestamp}] ${message}\n`);
+    console.error(`[${timestamp}] ${message}`);
+  };
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Load environment variables from .env file if it exists
 
 // Configuration
-const FORM_SERVER_URL = process.env.FORM_SERVER_URL || "https://syskall.com/mcp-human/";
+const FORM_URL = process.env.FORM_URL || "https://syskall.com/mcp-human/";
+const AWS_PROFILE = process.env.AWS_PROFILE || "mcp-human"; // Default to mcp-human profile
 const USE_SANDBOX = process.env.MTURK_SANDBOX !== "false"; // Default to sandbox for safety
+const DEFAULT_REWARD = process.env.DEFAULT_REWARD || "0.05"; // Default reward amount in USD
+const turkSubmitTo = USE_SANDBOX ? "https://workersandbox.mturk.com/mturk/externalSubmit" : "https://www.mturk.com/mturk/externalSubmit";
 
 // Initialize MTurk client
 const mturkClient = new MTurkClient({
@@ -28,7 +75,7 @@ const mturkClient = new MTurkClient({
     ? "https://mturk-requester-sandbox.us-east-1.amazonaws.com"
     : undefined,
   // Use the mcp-human AWS profile
-  profile: "mcp-human"
+  profile: AWS_PROFILE 
 });
 
 // Create an MCP server
@@ -44,7 +91,7 @@ server.tool(
     question: z.string().describe("The question to ask a human worker"),
     reward: z
       .string()
-      .default("0.05")
+      .default(DEFAULT_REWARD)
       .describe("The reward amount in USD (default: $0.05)"),
     title: z.string().optional().describe("Title for the HIT (optional)"),
     description: z
@@ -70,15 +117,19 @@ server.tool(
       let formUrl;
 
       // Always use the GitHub Pages URL
-      formUrl = new URL(FORM_SERVER_URL);
+      formUrl = new URL(FORM_URL);
 
       // Add question and callback parameters
-      formUrl.searchParams.append("question", encodeURIComponent(question));
+      formUrl.searchParams.append("question", question);
 
       // If a callback URL is provided, add it to the form URL
       if (process.env.CALLBACK_URL) {
         formUrl.searchParams.append("callbackUrl", process.env.CALLBACK_URL);
       }
+      formUrl.searchParams.append("turkSubmitTo", turkSubmitTo);
+      // assignmentId and hitId are added by the MTurk system
+      
+    log({ formUrl: formUrl.toString() });
 
       const params = {
         Title: title || "Answer a question from an AI assistant",
@@ -87,7 +138,7 @@ server.tool(
           "Please provide your human perspective on this question",
         Question: `
           <ExternalQuestion xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2006-07-14/ExternalQuestion.xsd">
-            <ExternalURL>${formUrl.toString()}</ExternalURL>
+            <ExternalURL>${escapeXml(formUrl.toString())}</ExternalURL>
             <FrameHeight>600</FrameHeight>
           </ExternalQuestion>
         `,
@@ -102,6 +153,7 @@ server.tool(
       const createResult = await mturkClient.send(new CreateHITCommand(params));
       const hitId = createResult.HIT?.HITId;
 
+      log({ createResult });
       if (!hitId) {
         throw new Error("Failed to create HIT");
       }
@@ -113,12 +165,14 @@ server.tool(
       const pollInterval = 5000; // Poll every 5 seconds
 
       while (Date.now() - startTime < maxWaitTime) {
+        log(`Fetching assignments for HIT ID: ${hitId}`);
         const listAssignmentsResponse = await mturkClient.send(
           new ListAssignmentsForHITCommand({
             HITId: hitId,
             AssignmentStatuses: ["Submitted", "Approved"],
           }),
         );
+        log({ listAssignmentsResponse })
 
         if (
           listAssignmentsResponse.Assignments &&
@@ -129,8 +183,13 @@ server.tool(
         }
 
         // Wait before polling again
-        await new Promise((resolve) => setTimeout(resolve, pollInterval));
+        log(`We have been waiting ${Date.now() - startTime}ms, maxWaitTime is ${maxWaitTime}ms`);
+        log(`Waiting ${pollInterval}ms to poll again...`);
+        await sleep(pollInterval);
+        log(`Going back to beginning of loop`);
       }
+
+      log({ assignment})
 
       // Return results
       if (assignment && assignment.AssignmentId) {
@@ -149,13 +208,8 @@ server.tool(
 
         if (assignment.Answer) {
           // Parse XML answer (simplified - in production, use an XML parser)
-          const answerText = assignment.Answer.replace(
-            /<\?xml.*?\?>/,
-            "",
-          ).replace(
-            /<Answer>.*?<QuestionIdentifier>.*?<\/QuestionIdentifier>.*?<FreeText>(.*?)<\/FreeText>.*?<\/Answer>/s,
-            "$1",
-          );
+          const parsed = xmlParser.parse(assignment.Answer); 
+          const answerText = parsed.QuestionFormAnswers.Answer.FreeText;
 
           return {
             content: [
@@ -361,7 +415,7 @@ server.resource(
         case "config":
           content = `MTurk Configuration:
 - Using Sandbox: ${USE_SANDBOX}
-- Form Server URL: ${FORM_SERVER_URL}
+- Form Server URL: ${FORM_URL}
 - Region: ${process.env.AWS_REGION || "us-east-1"}`;
           break;
 

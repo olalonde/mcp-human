@@ -1,6 +1,6 @@
-# MCP Human-in-the-loop
+# A MCP Server for Humans
 
-This MCP (Model Context Protocol) server allows AI assistants to delegate tasks to humans via Amazon Mechanical Turk. It provides a bridge between AI systems and human workers, enabling hybrid intelligence workflowsj.
+This MCP (Model Context Protocol) server allows AI assistants to delegate tasks to humans via Amazon Mechanical Turk. It provides a bridge between AI systems and human workers, enabling hybrid intelligence workflows.
 
 ## Setup
 
@@ -22,6 +22,22 @@ aws configure set aws_secret_access_key ${AWS_SECRETE_ACCESS_KEY} --profile mcp-
 
 ### Configuring MCP server with your MCP client
 
+### Claude code
+
+Sandbox mode:
+
+```sh
+claude mcp add human -- npx -y mcp-human@latest 
+```
+
+The server defaults to [sandbox mode](https://workersandbox.mturk.com/) (for testing). If you want to submit real requests, use `MTURK_SANDBOX=false`.
+
+```sh
+claude mcp add human -e MTURK_SANDBOX=false -- npx -y mcp-human@latest 
+```
+
+### Generic
+
 Update the configuration of your MCP client to the following: 
 
 ```json
@@ -35,23 +51,18 @@ Update the configuration of your MCP client to the following:
 }
 ```
 
-e.g.:
+e.g.: Claude Desktop (MacOS): `~/Library/Application\ Support/Claude/claude_desktop_config.json`
 
-Claude Desktop (MacOS): `~/Library/Application\ Support/Claude/claude_desktop_config.json`
-Claude Code: `cat ~/.claude.json`
+## TODO
 
-For Claude Code you can also use the following command:
-
-```sh
-claude mcp add human -- npx -y mcp-human@latest 
-```
+- [Progress notifications](https://github.com/modelcontextprotocol/typescript-sdk/issues/461) to avoid getting timing out.
 
 ## Architecture
 
 This system consists of two main components:
 
 1. **MCP Server**: A server implementing the Model Context Protocol that integrates with MTurk
-2. **Form Hosting**: A static HTML form that can be hosted anywhere, including GitHub Pages
+2. **Form**: A static HTML form.
 
 The AI assistant connects to the MCP server, which creates tasks on MTurk. Human workers complete these tasks through a form, and their responses are made available to the AI assistant.
 
@@ -63,11 +74,11 @@ The server can be configured with the following environment variables:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `CALLBACK_URL` | Optional URL for form submissions to be sent to | - |
 | `MTURK_SANDBOX` | Use MTurk sandbox (`true`) or production (`false`) | `true` |
 | `AWS_REGION` | AWS region for MTurk | `us-east-1` |
-| `AWS_ACCESS_KEY_ID` | AWS access key ID | - |
-| `AWS_SECRET_ACCESS_KEY` | AWS secret access key | - |
+| `AWS_PROFILE` | AWS profile to use for credentials | `mcp-human` |
+| `DEFAULT_REWARD` | The reward amount in USD. | `0.05` |
+| `FORM_URL` | URL where the form is hosted. Needs to be https. | `https://syskall.com/mcp-human/` |
 
 ### Setting Up AWS User with Mechanical Turk Access
 
