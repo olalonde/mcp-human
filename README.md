@@ -57,6 +57,45 @@ The server can be configured with the following environment variables:
 | `AWS_ACCESS_KEY_ID` | AWS access key ID | - |
 | `AWS_SECRET_ACCESS_KEY` | AWS secret access key | - |
 
+### Setting Up AWS User with Mechanical Turk Access
+
+To create an AWS user with appropriate permissions for Mechanical Turk:
+
+1. **Log in to the AWS Management Console**:
+   - Go to https://aws.amazon.com/console/
+   - Sign in as a root user or an administrator
+
+2. **Create a new IAM User**:
+   - Navigate to IAM (Identity and Access Management)
+   - Click "Users" > "Create user"
+   - Enter a username (e.g., `mturk-api-user`)
+   - Click "Next" to proceed to permissions
+
+3. **Set Permissions**:
+   - Choose "Attach existing policies directly"
+   - Search for and select `AmazonMechanicalTurkFullAccess`
+   - If you need more granular control, you can create a custom policy with specific MTurk permissions
+   - Click "Next" and then "Create user"
+
+4. **Create Access Keys**:
+   - After user creation, click on the username to go to their detail page
+   - Go to the "Security credentials" tab
+   - In the "Access keys" section, click "Create access key"
+   - Choose "Application running outside AWS" or appropriate option
+   - Click through the wizard and finally "Create access key"
+
+5. **Save Credentials**:
+   - Download the CSV file or copy the Access key ID and Secret access key 
+   - These will be used as `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables
+   - **Important**: This is the only time you'll see the secret access key, so save it securely
+
+6. **Configure MTurk Requester Settings**:
+   - Visit the MTurk Requester website: https://requester.mturk.com/
+   - Set up payment method and other account details
+   - For testing, use the MTurk Sandbox: https://requestersandbox.mturk.com/
+
+> **Note**: Always start with the MTurk Sandbox (`MTURK_SANDBOX=true`) to test your integration without spending real money. Only switch to production when you're confident in your implementation.
+
 ## MCP Tools
 
 ### askHuman
