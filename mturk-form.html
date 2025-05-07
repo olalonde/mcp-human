@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant Question</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .container {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .question {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .instructions {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Answer a Question from an AI Assistant</h1>
+    
+    <div class="instructions">
+        <p>An AI assistant is seeking human input on the following question. Please provide a thoughtful and helpful response.</p>
+    </div>
+    
+    <div class="container">
+        <div class="question" id="question-display">
+            Loading question...
+        </div>
+        
+        <form id="answer-form">
+            <input type="hidden" id="assignmentId" name="assignmentId" value="">
+            <div>
+                <label for="answer"><b>Your Answer:</b></label>
+                <textarea id="answer" name="answer" required></textarea>
+            </div>
+            <button type="submit">Submit Answer</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Parse URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const question = urlParams.get('question');
+            const assignmentId = urlParams.get('assignmentId');
+            
+            // Display the question
+            if (question) {
+                document.getElementById('question-display').textContent = question;
+            } else {
+                document.getElementById('question-display').textContent = "Error: No question provided.";
+            }
+            
+            // Set the assignment ID
+            if (assignmentId) {
+                document.getElementById('assignmentId').value = assignmentId;
+            }
+            
+            // Handle form submission
+            document.getElementById('answer-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const answer = document.getElementById('answer').value;
+                
+                // In a real implementation, you would submit this back to MTurk
+                // This is just a placeholder for demonstration
+                if (window.opener) {
+                    window.opener.postMessage({ 
+                        assignmentId: assignmentId, 
+                        answer: answer 
+                    }, '*');
+                    alert('Answer submitted successfully!');
+                    window.close();
+                } else {
+                    // If not opened as a popup, submit to MTurk
+                    // You would need to implement this part for actual MTurk integration
+                    alert('Answer recorded: ' + answer);
+                    
+                    // For demonstration purposes only
+                    const form = document.createElement('form');
+                    form.method = 'post';
+                    form.action = 'https://workersandbox.mturk.com/mturk/externalSubmit'; // Use the actual submission URL in production
+                    
+                    const answerInput = document.createElement('input');
+                    answerInput.type = 'hidden';
+                    answerInput.name = 'answer';
+                    answerInput.value = answer;
+                    form.appendChild(answerInput);
+                    
+                    const assignmentInput = document.createElement('input');
+                    assignmentInput.type = 'hidden';
+                    assignmentInput.name = 'assignmentId';
+                    assignmentInput.value = assignmentId || '';
+                    form.appendChild(assignmentInput);
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
