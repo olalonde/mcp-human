@@ -135,7 +135,7 @@
                 if (assignmentId && turkSubmitTo) {
                     // Let the form submit normally to MTurk's endpoint
                     this.method = 'post';
-                    this.action = turkSubmitTo + '/mturk/externalSubmit';
+                    this.action = turkSubmitTo;
                     
                     // Show success message after submission
                     const formContainer = document.getElementById('form-container');
