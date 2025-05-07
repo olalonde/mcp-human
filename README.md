@@ -1,6 +1,39 @@
 # MCP Human-in-the-loop
 
-This MCP (Model Context Protocol) server allows AI assistants to delegate tasks to humans via Amazon Mechanical Turk. It provides a bridge between AI systems and human workers, enabling hybrid intelligence workflows.
+This MCP (Model Context Protocol) server allows AI assistants to delegate tasks to humans via Amazon Mechanical Turk. It provides a bridge between AI systems and human workers, enabling hybrid intelligence workflowsj.
+
+## Setup
+
+### Prerequisites
+
+- Node.js 16+
+- AWS credentials with MTurk permissions. See [instructions below](#setting-up-aws-user-with-mechanical-turk-access).
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) (recommended for setting aws credentials)
+
+### Configuring AWS credentials
+
+```sh
+# Configure AWS credentials for profile mcp-human
+export AWS_ACCESS_KEY_ID="your_access_key"
+export AWS_SECRET_ACCESS_KEY="your_secret_key"
+aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID} --profile mcp-human
+aws configure set aws_secret_access_key ${AWS_SECRETE_ACCESS_KEY} --profile mcp-human
+```
+
+### Configuring MCP server with your MCP client
+
+Update the configuration of your MCP client to the following: 
+
+```json
+{
+  "mcpServers": {
+    "mcpmcp": {
+      "command": "npx",
+      "args": ["-y", "mcp-human@latest"]
+    }
+  }
+}
+```
 
 ## Architecture
 
@@ -11,39 +44,7 @@ This system consists of two main components:
 
 The AI assistant connects to the MCP server, which creates tasks on MTurk. Human workers complete these tasks through a form, and their responses are made available to the AI assistant.
 
-## Setup
-
-### Prerequisites
-
-- Node.js 16+
-- An AWS account with MTurk access
-- AWS credentials with MTurk permissions
-
-### Installation
-
-```
-npm install mcp-human
-```
-
-Configure AWS credentials:
-
-```
-export AWS_ACCESS_KEY_ID=your_access_key
-export AWS_SECRET_ACCESS_KEY=your_secret_key
-export AWS_REGION=us-east-1
-```
-
-### Form
-
 The Mechanical Turk form used is hosted on GitHub pages: [https://syskall.com/mcp-human/](https://syskall.com/mcp-human/). It gets populated with data through query parameters.
-
-### Running the MCP Server
-
-Start the MCP server:
-
-```
-npm run start
-```
 
 ### Configuration
 
