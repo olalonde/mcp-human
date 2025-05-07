@@ -21,11 +21,16 @@ const xmlParser = new XMLParser();
 function escapeXml(unsafe: string) {
   return unsafe.replace(/[<>&'"]/g, (c: string): string => {
     switch (c) {
-      case '<': return '&lt;';
-      case '>': return '&gt;';
-      case '&': return '&amp;';
-      case '"': return '&quot;';
-      case "'": return '&apos;';
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case "&":
+        return "&amp;";
+      case '"':
+        return "&quot;";
+      case "'":
+        return "&apos;";
     }
     return c;
   });
@@ -65,7 +70,9 @@ const FORM_URL = process.env.FORM_URL || "https://syskall.com/mcp-human/";
 const AWS_PROFILE = process.env.AWS_PROFILE || "mcp-human"; // Default to mcp-human profile
 const USE_SANDBOX = process.env.MTURK_SANDBOX !== "false"; // Default to sandbox for safety
 const DEFAULT_REWARD = process.env.DEFAULT_REWARD || "0.05"; // Default reward amount in USD
-const turkSubmitTo = USE_SANDBOX ? "https://workersandbox.mturk.com/mturk/externalSubmit" : "https://www.mturk.com/mturk/externalSubmit";
+const turkSubmitTo = USE_SANDBOX
+  ? "https://workersandbox.mturk.com/mturk/externalSubmit"
+  : "https://www.mturk.com/mturk/externalSubmit";
 
 // Initialize MTurk client
 const mturkClient = new MTurkClient({
@@ -75,7 +82,7 @@ const mturkClient = new MTurkClient({
     ? "https://mturk-requester-sandbox.us-east-1.amazonaws.com"
     : undefined,
   // Use the mcp-human AWS profile
-  profile: AWS_PROFILE 
+  profile: AWS_PROFILE,
 });
 
 // Create an MCP server
@@ -101,15 +108,9 @@ server.tool(
     hitValiditySeconds: z
       .number()
       .default(3600)
-      .describe("Time until the HIT expires in seconds (default: 1 hour)")
+      .describe("Time until the HIT expires in seconds (default: 1 hour)"),
   },
-  async ({
-    question,
-    reward,
-    title,
-    description,
-    hitValiditySeconds,
-  }) => {
+  async ({ question, reward, title, description, hitValiditySeconds }) => {
     try {
       // Create HIT parameters
       // For GitHub Pages, use the direct HTML page URL
@@ -128,8 +129,8 @@ server.tool(
       }
       formUrl.searchParams.append("turkSubmitTo", turkSubmitTo);
       // assignmentId and hitId are added by the MTurk system
-      
-    log({ formUrl: formUrl.toString() });
+
+      log({ formUrl: formUrl.toString() });
 
       const params = {
         Title: title || "Answer a question from an AI assistant",
@@ -172,7 +173,7 @@ server.tool(
             AssignmentStatuses: ["Submitted", "Approved"],
           }),
         );
-        log({ listAssignmentsResponse })
+        log({ listAssignmentsResponse });
 
         if (
           listAssignmentsResponse.Assignments &&
@@ -183,13 +184,15 @@ server.tool(
         }
 
         // Wait before polling again
-        log(`We have been waiting ${Date.now() - startTime}ms, maxWaitTime is ${maxWaitTime}ms`);
+        log(
+          `We have been waiting ${Date.now() - startTime}ms, maxWaitTime is ${maxWaitTime}ms`,
+        );
         log(`Waiting ${pollInterval}ms to poll again...`);
         await sleep(pollInterval);
         log(`Going back to beginning of loop`);
       }
 
-      log({ assignment})
+      log({ assignment });
 
       // Return results
       if (assignment && assignment.AssignmentId) {
@@ -208,7 +211,7 @@ server.tool(
 
         if (assignment.Answer) {
           // Parse XML answer (simplified - in production, use an XML parser)
-          const parsed = xmlParser.parse(assignment.Answer); 
+          const parsed = xmlParser.parse(assignment.Answer);
           const answerText = parsed.QuestionFormAnswers.Answer.FreeText;
 
           return {
@@ -362,16 +365,28 @@ server.tool(
 // Add a resource for MTurk account info
 server.resource(
   "mturk-account",
-  new ResourceTemplate("mturk-account://{info}", { 
+  new ResourceTemplate("mturk-account://{info}", {
     list: async () => {
       return {
         resources: [
-          { name: "balance", uri: "mturk-account://balance", description: "Get MTurk account balance" },
-          { name: "hits", uri: "mturk-account://hits", description: "List active HITs" },
-          { name: "config", uri: "mturk-account://config", description: "Get MTurk configuration" }
-        ]
+          {
+            name: "balance",
+            uri: "mturk-account://balance",
+            description: "Get MTurk account balance",
+          },
+          {
+            name: "hits",
+            uri: "mturk-account://hits",
+            description: "List active HITs",
+          },
+          {
+            name: "config",
+            uri: "mturk-account://config",
+            description: "Get MTurk configuration",
+          },
+        ],
       };
-    }
+    },
   }),
   async (uri, { info }) => {
     try {
@@ -453,7 +468,7 @@ server.prompt(
     question: z.string(),
     reward: z.string().optional(),
     title: z.string().optional(),
-    maxWaitTime: z.string().optional()
+    maxWaitTime: z.string().optional(),
   },
   (args) => ({
     messages: [
@@ -461,25 +476,25 @@ server.prompt(
         role: "user",
         content: {
           type: "text",
-          text: `I need to ask a human worker the following question: "${args.question}"`
-        }
+          text: `I need to ask a human worker the following question: "${args.question}"`,
+        },
       },
       {
         role: "assistant",
         content: {
           type: "text",
-          text: `I'll help you ask a human worker through Mechanical Turk. Let me set that up for you.`
-        }
+          text: `I'll help you ask a human worker through Mechanical Turk. Let me set that up for you.`,
+        },
       },
       {
         role: "assistant",
         content: {
           type: "text",
-          text: `Let me ask a human for you: "${args.question}"`
-        }
-      }
-    ]
-  })
+          text: `Let me ask a human for you: "${args.question}"`,
+        },
+      },
+    ],
+  }),
 );
 
 // Add another prompt for checking HIT status
@@ -487,7 +502,7 @@ server.prompt(
   "check-hit",
   "A prompt for checking the status of a HIT",
   {
-    hitId: z.string()
+    hitId: z.string(),
   },
   (args) => ({
     messages: [
@@ -495,18 +510,18 @@ server.prompt(
         role: "user",
         content: {
           type: "text",
-          text: `Check the status of HIT with ID ${args.hitId}`
-        }
+          text: `Check the status of HIT with ID ${args.hitId}`,
+        },
       },
       {
         role: "assistant",
         content: {
           type: "text",
-          text: `I'll check the status of the HIT with ID ${args.hitId} for you.`
-        }
-      }
-    ]
-  })
+          text: `I'll check the status of the HIT with ID ${args.hitId} for you.`,
+        },
+      },
+    ],
+  }),
 );
 
 // Start receiving messages on stdin and sending messages on stdout
