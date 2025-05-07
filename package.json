@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "type-check": "tsc --noEmit",
     "start": "node dist/index.js",
-    "dev": "tsc && node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node src/index.ts",
+    "test": "npm run type-check"
   },
   "author": "",
   "license": "ISC",

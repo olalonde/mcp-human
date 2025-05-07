@@ -8,8 +8,9 @@
     "outDir": "./dist",
     "declaration": true,
     "sourceMap": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": "./src"
   },
-  "include": ["*.ts"],
+  "include": ["*.ts", "src/index.ts"],
   "exclude": ["node_modules", "dist"]
 }
