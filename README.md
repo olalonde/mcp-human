@@ -38,24 +38,9 @@ The AI assistant connects to the MCP server, which creates tasks on MTurk. Human
    npm run build
    ```
 
-### Form Hosting Options
+### Form
 
-You have two options for hosting the MTurk form:
-
-#### Option 1: Use GitHub Pages (Recommended)
-
-1. Fork this repository to your GitHub account
-2. Enable GitHub Pages in the repository settings
-3. The form will be available at `https://yourusername.github.io/mcp-human/mturk-form.html`
-4. Set the `GITHUB_PAGES_URL` environment variable to `https://yourusername.github.io/mcp-human`
-
-#### Option 2: Run the local form server
-
-1. Start the form server:
-   ```
-   node form-server.js
-   ```
-2. Note: For MTurk to access this, you'll need to make it publicly accessible (using ngrok, port forwarding, etc.)
+The Mechanical Turk form used is hosted on GitHub pages: [https://syskall.com/mcp-human/](https://syskall.com/mcp-human/). It gets populated with data through query parameters.
 
 ### Running the MCP Server
 
