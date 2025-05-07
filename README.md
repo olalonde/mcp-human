@@ -1,6 +1,6 @@
 # A MCP Server for Humans
 
-This MCP (Model Context Protocol) server allows AI assistants to delegate tasks to humans via Amazon Mechanical Turk. It provides a bridge between AI systems and human workers, enabling hybrid intelligence workflows.
+MCP (Model Context Protocol) server that gives human assistance to AIs. It uses Amazon Mechanical Turk to ask questions to a real humans. This is more of a proof-of-concept than a serious tool but improvements are welcome. See [limitations](#limitations).
 
 ![we need to go deeper](./deeper.gif)
 
@@ -55,22 +55,7 @@ Update the configuration of your MCP client to the following:
 
 e.g.: Claude Desktop (MacOS): `~/Library/Application\ Support/Claude/claude_desktop_config.json`
 
-## TODO
-
-- [Progress notifications](https://github.com/modelcontextprotocol/typescript-sdk/issues/461) to avoid getting timing out.
-
-## Architecture
-
-This system consists of two main components:
-
-1. **MCP Server**: A server implementing the Model Context Protocol that integrates with MTurk
-2. **Form**: A static HTML form.
-
-The AI assistant connects to the MCP server, which creates tasks on MTurk. Human workers complete these tasks through a form, and their responses are made available to the AI assistant.
-
-The Mechanical Turk form used is hosted on GitHub pages: [https://syskall.com/mcp-human/](https://syskall.com/mcp-human/). It gets populated with data through query parameters.
-
-### Configuration
+## Configuration
 
 The server can be configured with the following environment variables:
 
@@ -82,7 +67,7 @@ The server can be configured with the following environment variables:
 | `DEFAULT_REWARD` | The reward amount in USD. | `0.05` |
 | `FORM_URL` | URL where the form is hosted. Needs to be https. | `https://syskall.com/mcp-human/` |
 
-### Setting Up AWS User with Mechanical Turk Access
+## Setting Up AWS User with Mechanical Turk Access
 
 To create an AWS user with appropriate permissions for Mechanical Turk:
 
@@ -120,6 +105,17 @@ To create an AWS user with appropriate permissions for Mechanical Turk:
    - For testing, use the MTurk Sandbox: https://requestersandbox.mturk.com/
 
 > **Note**: Always start with the MTurk Sandbox (`MTURK_SANDBOX=true`) to test your integration without spending real money. Only switch to production when you're confident in your implementation.
+
+## Architecture
+
+This system consists of two main components:
+
+1. **MCP Server**: A server implementing the Model Context Protocol that integrates with MTurk
+2. **Form**: A static HTML form.
+
+The AI assistant connects to the MCP server, which creates tasks on MTurk. Human workers complete these tasks through a form, and their responses are made available to the AI assistant.
+
+The Mechanical Turk form used is hosted on GitHub pages: [https://syskall.com/mcp-human/](https://syskall.com/mcp-human/). It gets populated with data through query parameters.
 
 ## MCP Tools
 
@@ -174,19 +170,11 @@ URIs:
 - `mturk-account://hits` - List HITs
 - `mturk-account://config` - Get configuration info
 
-# Limitations
+## Limitations
 
+- Need to implement [progress notifications](https://github.com/modelcontextprotocol/typescript-sdk/issues/461) to avoid getting timing out.
 - Currently only supports simple text-based questions and answers
 - Limited to one assignment per HIT
 - No support for custom HTML/JS in the form
 - Simple polling for results rather than a webhook approach
 - Uses MTurk's ExternalQuestion format, which requires hosting a form
-
-# Future Enhancements
-
-- Support for qualification requirements
-- Support for multiple assignments per HIT
-- Ability to specify worker selection criteria
-- Custom form templates
-- WebSocket-based notifications for real-time responses
-- Integration with MTurk Review Policies
