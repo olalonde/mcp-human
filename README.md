@@ -21,22 +21,17 @@ The AI assistant connects to the MCP server, which creates tasks on MTurk. Human
 
 ### Installation
 
-1. Install dependencies:
-   ```
-   npm install
-   ```
+```
+npm install mcp-human
+```
 
-2. Configure AWS credentials:
-   ```
-   export AWS_ACCESS_KEY_ID=your_access_key
-   export AWS_SECRET_ACCESS_KEY=your_secret_key
-   export AWS_REGION=us-east-1
-   ```
+Configure AWS credentials:
 
-3. Build the TypeScript code:
-   ```
-   npm run build
-   ```
+```
+export AWS_ACCESS_KEY_ID=your_access_key
+export AWS_SECRET_ACCESS_KEY=your_secret_key
+export AWS_REGION=us-east-1
+```
 
 ### Form
 
@@ -45,6 +40,7 @@ The Mechanical Turk form used is hosted on GitHub pages: [https://syskall.com/mc
 ### Running the MCP Server
 
 Start the MCP server:
+
 ```
 npm run start
 ```
@@ -55,8 +51,6 @@ The server can be configured with the following environment variables:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `GITHUB_PAGES_URL` | URL to the GitHub Pages site hosting the form | - |
-| `FORM_SERVER_URL` | URL to the form server (if not using GitHub Pages) | `http://localhost:3000` |
 | `CALLBACK_URL` | Optional URL for form submissions to be sent to | - |
 | `MTURK_SANDBOX` | Use MTurk sandbox (`true`) or production (`false`) | `true` |
 | `AWS_REGION` | AWS region for MTurk | `us-east-1` |
@@ -116,37 +110,7 @@ URIs:
 - `mturk-account://hits` - List HITs
 - `mturk-account://config` - Get configuration info
 
-## Production Deployment
-
-For production use:
-
-### GitHub Pages Setup (Recommended)
-
-1. Fork this repository to your GitHub account
-2. Go to your repository settings > Pages
-3. Set the source to "main" branch and the folder to "/ (root)"
-4. Wait for GitHub to publish your site (URL will be shown in settings)
-5. Set the `GITHUB_PAGES_URL` environment variable to your GitHub Pages URL
-6. Set `MTURK_SANDBOX=false` for real MTurk tasks (costs real money!)
-
-### Alternative Deployment Options
-
-1. Host the static form on any web hosting service (AWS S3, Netlify, Vercel, etc.)
-2. Set `GITHUB_PAGES_URL` to your hosting URL
-3. If you need server-side functionality (for receiving callbacks):
-   - Deploy the form-server.js to a service like Heroku, Railway, or AWS EC2
-   - Set `CALLBACK_URL` to point to your server's API endpoint
-4. Set `MTURK_SANDBOX=false` for real MTurk tasks
-
-### Additional Production Considerations
-
-1. Use HTTPS for all URLs (required by MTurk)
-2. Consider adding authentication to your callback endpoints
-3. Use a proper XML parser for processing MTurk answers
-4. Add more error handling and retries
-5. Set up monitoring for your MCP server
-
-## Limitations
+# Limitations
 
 - Currently only supports simple text-based questions and answers
 - Limited to one assignment per HIT
@@ -154,7 +118,7 @@ For production use:
 - Simple polling for results rather than a webhook approach
 - Uses MTurk's ExternalQuestion format, which requires hosting a form
 
-## Future Enhancements
+# Future Enhancements
 
 - Support for qualification requirements
 - Support for multiple assignments per HIT
