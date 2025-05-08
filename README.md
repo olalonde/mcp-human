@@ -128,8 +128,7 @@ Parameters:
 - `reward`: The reward amount in USD (default: $0.05)
 - `title`: Title for the HIT (optional)
 - `description`: Description for the HIT (optional)
-- `timeoutSeconds`: Time until the HIT expires in seconds (default: 1 hour)
-- `maxWaitSeconds`: Maximum time to wait for a response in seconds (default: 5 minutes)
+- `hitValiditySeconds`: Time until the HIT expires in seconds (default: 1 hour)
 
 Example usage:
 ```javascript
@@ -138,11 +137,11 @@ const response = await call("askHuman", {
   question: "What's a creative name for a smart home device that adjusts lighting based on mood?",
   reward: "0.25",
   title: "Help with creative product naming",
-  maxWaitSeconds: 600 // Wait up to 10 minutes
+  hitValiditySeconds: 3600 // HIT valid for 1 hour
 });
 ```
 
-If a worker responds within the `maxWaitSeconds` window, the response will contain their answer. If not, it will return a HIT ID that can be checked later.
+If a worker responds within the HIT's validity period, the response will contain their answer. If not, it will return a HIT ID that can be checked later.
 
 ### checkHITStatus
 
