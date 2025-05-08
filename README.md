@@ -1,6 +1,6 @@
-# A MCP Server for Human Assistance
+# MCP-Human: Human Assistance for AI Assistants
 
-MCP (Model Context Protocol) server that gives human assistance to AIs. It uses Amazon Mechanical Turk to ask questions to a real humans. This is more of a proof-of-concept than a serious tool but improvements are welcome. See [limitations](#limitations).
+A Model Context Protocol (MCP) server that enables AI assistants to get human input when needed. This tool creates tasks on Amazon Mechanical Turk that let real humans answer questions from AI systems. While primarily a proof-of-concept, it demonstrates how to build human-in-the-loop AI systems using the MCP standard. See [limitations](#limitations) for current constraints.
 
 ![we need to go deeper](./deeper.gif)
 
@@ -19,7 +19,7 @@ MCP (Model Context Protocol) server that gives human assistance to AIs. It uses 
 export AWS_ACCESS_KEY_ID="your_access_key"
 export AWS_SECRET_ACCESS_KEY="your_secret_key"
 aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID} --profile mcp-human
-aws configure set aws_secret_access_key ${AWS_SECRETE_ACCESS_KEY} --profile mcp-human
+aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY} --profile mcp-human
 ```
 
 ### Configuring MCP server with your MCP client
@@ -29,18 +29,18 @@ aws configure set aws_secret_access_key ${AWS_SECRETE_ACCESS_KEY} --profile mcp-
 Sandbox mode:
 
 ```sh
-claude mcp add human -- npx -y mcp-human@latest 
+claude mcp add human -- npx -y mcp-human@latest
 ```
 
 The server defaults to [sandbox mode](https://workersandbox.mturk.com/) (for testing). If you want to submit real requests, use `MTURK_SANDBOX=false`.
 
 ```sh
-claude mcp add human -e MTURK_SANDBOX=false -- npx -y mcp-human@latest 
+claude mcp add human -e MTURK_SANDBOX=false -- npx -y mcp-human@latest
 ```
 
 ### Generic
 
-Update the configuration of your MCP client to the following: 
+Update the configuration of your MCP client to the following:
 
 ```json
 {
@@ -59,35 +59,39 @@ e.g.: Claude Desktop (MacOS): `~/Library/Application\ Support/Claude/claude_desk
 
 The server can be configured with the following environment variables:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `MTURK_SANDBOX` | Use MTurk sandbox (`true`) or production (`false`) | `true` |
-| `AWS_REGION` | AWS region for MTurk | `us-east-1` |
-| `AWS_PROFILE` | AWS profile to use for credentials | `mcp-human` |
-| `DEFAULT_REWARD` | The reward amount in USD. | `0.05` |
-| `FORM_URL` | URL where the form is hosted. Needs to be https. | `https://syskall.com/mcp-human/` |
+| Variable         | Description                                        | Default                          |
+| ---------------- | -------------------------------------------------- | -------------------------------- |
+| `MTURK_SANDBOX`  | Use MTurk sandbox (`true`) or production (`false`) | `true`                           |
+| `AWS_REGION`     | AWS region for MTurk                               | `us-east-1`                      |
+| `AWS_PROFILE`    | AWS profile to use for credentials                 | `mcp-human`                      |
+| `DEFAULT_REWARD` | The reward amount in USD.                          | `0.05`                           |
+| `FORM_URL`       | URL where the form is hosted. Needs to be https.   | `https://syskall.com/mcp-human/` |
 
 ## Setting Up AWS User with Mechanical Turk Access
 
 To create an AWS user with appropriate permissions for Mechanical Turk:
 
 1. **Log in to the AWS Management Console**:
+
    - Go to https://aws.amazon.com/console/
    - Sign in as a root user or an administrator
 
 2. **Create a new IAM User**:
+
    - Navigate to IAM (Identity and Access Management)
    - Click "Users" > "Create user"
    - Enter a username (e.g., `mturk-api-user`)
    - Click "Next" to proceed to permissions
 
 3. **Set Permissions**:
+
    - Choose "Attach existing policies directly"
    - Search for and select `AmazonMechanicalTurkFullAccess`
    - If you need more granular control, you can create a custom policy with specific MTurk permissions
    - Click "Next" and then "Create user"
 
 4. **Create Access Keys**:
+
    - After user creation, click on the username to go to their detail page
    - Go to the "Security credentials" tab
    - In the "Access keys" section, click "Create access key"
@@ -95,7 +99,8 @@ To create an AWS user with appropriate permissions for Mechanical Turk:
    - Click through the wizard and finally "Create access key"
 
 5. **Save Credentials**:
-   - Download the CSV file or copy the Access key ID and Secret access key 
+
+   - Download the CSV file or copy the Access key ID and Secret access key
    - These will be used as `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables
    - **Important**: This is the only time you'll see the secret access key, so save it securely
 
@@ -124,6 +129,7 @@ The Mechanical Turk form used is hosted on GitHub pages: [https://syskall.com/mc
 Allows an AI to ask a question to a human worker on Mechanical Turk.
 
 Parameters:
+
 - `question`: The question to ask a human worker
 - `reward`: The reward amount in USD (default: $0.05)
 - `title`: Title for the HIT (optional)
@@ -131,13 +137,15 @@ Parameters:
 - `hitValiditySeconds`: Time until the HIT expires in seconds (default: 1 hour)
 
 Example usage:
+
 ```javascript
 // From the AI assistant's perspective
 const response = await call("askHuman", {
-  question: "What's a creative name for a smart home device that adjusts lighting based on mood?",
+  question:
+    "What's a creative name for a smart home device that adjusts lighting based on mood?",
   reward: "0.25",
   title: "Help with creative product naming",
-  hitValiditySeconds: 3600 // HIT valid for 1 hour
+  hitValiditySeconds: 3600, // HIT valid for 1 hour
 });
 ```
 
@@ -148,13 +156,15 @@ If a worker responds within the HIT's validity period, the response will contain
 Check the status of a previously created HIT and retrieve any submitted assignments.
 
 Parameters:
+
 - `hitId`: The HIT ID to check status for
 
 Example usage:
+
 ```javascript
 // From the AI assistant's perspective
 const status = await call("checkHITStatus", {
-  hitId: "3XMVN1BINNIXMTM9TTDO1GKMW7SGGZ"
+  hitId: "3XMVN1BINNIXMTM9TTDO1GKMW7SGGZ",
 });
 ```
 
@@ -165,6 +175,7 @@ const status = await call("checkHITStatus", {
 Provides access to MTurk account information.
 
 URIs:
+
 - `mturk-account://balance` - Get account balance
 - `mturk-account://hits` - List HITs
 - `mturk-account://config` - Get configuration info
